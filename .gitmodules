@@ -1,0 +1,3 @@
+[submodule "prices"]
+	path = prices
+	url = git@github.com:dylankilkenny/CoinMarketCap-Historical-Prices.git
