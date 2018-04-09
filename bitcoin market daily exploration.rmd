@@ -1,0 +1,17 @@
+---
+title: "bitcoin market daily exploration"
+author: "Carlo Provinciali"
+date: "April 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Import dataset
+```{r}
+bit <- read.csv("C:/Users/Carlo/Desktop/COMSE6998-NLP-Project/data/bitcoin_markets_daily_discussion_03172018_04082018.csv")
+```
+
