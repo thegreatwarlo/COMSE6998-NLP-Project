@@ -9,9 +9,38 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+```{r}
+library(readr)
+library(tokenizers)
+library(tidyverse)
+library(stopwords)
+```
+
 
 Import dataset
 ```{r}
-bit <- read.csv("C:/Users/Carlo/Desktop/COMSE6998-NLP-Project/data/bitcoin_markets_daily_discussion_03172018_04082018.csv")
+bit <- read_csv("C:/Users/Carlo/Desktop/COMSE6998-NLP-Project/data/bitcoin_markets_daily_discussion_03172018_04082018.csv",     col_types = cols(date = col_character()))
+```
+
+```{r}
+word_tokens_list <- tokenize_words(bit$body, stopwords = stopwords() )
+
+word_tokens <- data.frame(unlist(word_tokens_list))
+
+names(word_tokens)<- c("tokens")
+
+token_freq <- word_tokens %>% group_by(tokens) %>% summarize(count = n()) %>% arrange(desc(count))
+
+head(token_freq, 30)
+
+```
+
+Visualize the frequency of the most common words
+
+```{r}
+ggplot(token_freq[1:30,], aes(x =reorder(tokens, count ), y = count))+
+  geom_col()+
+  coord_flip()+
+  ggtitle("Frequency of most common words - excluding stopwords")
 ```
 
