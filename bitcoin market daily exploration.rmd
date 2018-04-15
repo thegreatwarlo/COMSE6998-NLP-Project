@@ -44,3 +44,9 @@ ggplot(token_freq[1:30,], aes(x =reorder(tokens, count ), y = count))+
   ggtitle("Frequency of most common words - excluding stopwords")
 ```
 
+```{r}
+subset(token_freq, token_freq$tokens == "hodl")
+
+subset(token_freq, token_freq$tokens == "shitcoin")
+```
+
