@@ -6,8 +6,8 @@ Created on Sun Apr 15 13:11:19 2018
 """
 
 import csv
-import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
+from collections import defaultdict
 
 
 IN_FILE = './data/bitcoin_markets_daily_discussion_03172018_04082018.csv'
@@ -28,6 +28,21 @@ with open(IN_FILE) as f:
         out_row = [entry for entry in row]
         out_row.append(ss_score)
         corpus.append(out_row)
+        
+comments_per_day = defaultdict(list)
+
+for c in corpus:
+    comments_per_day[c[1]].append(corpus)
+    
+features = []
+
+for c in corpus:
+    datum = {}
+    datum['date'] = c[1]
+    datum['sentiment'] = c[4]
+    datum['n_comments'] = len(comments_per_day[c[1]])
+    datum['length'] = len(c[2])
+    features.append(datum)
         
 
 
