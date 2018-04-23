@@ -13,7 +13,12 @@ import numpy as np
 #from collections import defaultdict
 
 
-IN_FILE = './data/data/bitcoin_markets_daily_discussion_september_v1.csv'
+IN_FILE_1 = './data/data/bitcoin_markets_daily_discussion_september_v1.csv'
+IN_FILE_2 = './data/data/bitcoin_markets_daily_discussion_october_v1.csv'
+IN_FILE_3 = './data/data/bitcoin_markets_daily_discussion_november_v1.csv'
+IN_FILE_4 = './data/data/bitcoin_markets_daily_discussion_december_v1.csv'
+IN_FILE_5 = './data/data/bitcoin_markets_daily_discussion_november_v1.csv'
+IN_FILE_6 = './data/data/bitcoin_markets_daily_discussion_august_v1.csv'
 LEXICON = './combined.txt'
 
 
@@ -24,15 +29,15 @@ vader = SIA()
 
 corpus = []
 
-with open(IN_FILE) as f:
-    reader = csv.reader(f, delimiter = ',', quotechar = '"')
-    next(f)
-    for row in reader:
-        ss_score = socialsent.polarity_scores(row[2])
-        out_row = [entry for entry in row]
-        out_row.append(ss_score)
-        corpus.append(out_row)
-
+def read_corpus(infile, corp):
+    with open(infile) as f:
+        reader = csv.reader(f, delimiter = ',', quotechar = '"')
+        next(f)
+        for row in reader:
+            ss_score = socialsent.polarity_scores(row[3])
+            out_row = [entry for entry in row]
+            out_row.append(ss_score)
+            corp.append(out_row)
 
     
 def sentiment_normal_avg_byday(df, lexicon_name):
@@ -73,20 +78,27 @@ def sentiment_child_avg_byday(df, lexicon_name):
 # Bullish, Bearish, Long-term Holder, Bitcoin Skeptic, None
 def get_author_opinion(dataframe):
     opinion_types = ['Bullish','Bearish','Long-term Holder','Bitcoin Skeptic','None']
-    for type in opinion_types:
-        dataframe[type] = 0
-    for i in range(dataframe.shape[0]):
-        dataframe.set_value(i, dataframe.iloc[i]["author_opinion"], 1)
+    for t in opinion_types:
+        dataframe[t] = 0
+    for index, entry in dataframe.iterrows():
+        dataframe.set_value(index, entry["author_opinion"], 1)
     return dataframe
 
 def opinion_avg_byday(df):
     opinion_types = ['Bullish','Bearish','Long-term Holder','Bitcoin Skeptic','None']
     groupby_dict = {}
-    for type in opinion_types:
-        groupby_dict[type] = "mean"
+    for t in opinion_types:
+        groupby_dict[t] = "mean"
     return df.groupby("daily_discussion_date").agg(groupby_dict)
 
 # main function
+    
+read_corpus(IN_FILE_1, corpus)
+read_corpus(IN_FILE_2, corpus)
+read_corpus(IN_FILE_3, corpus)
+read_corpus(IN_FILE_4, corpus)
+read_corpus(IN_FILE_5, corpus)
+read_corpus(IN_FILE_6, corpus)
 
 data_test = pd.DataFrame(corpus)
 data_test.columns = ["comment_id","daily_discussion_date","created","body",
@@ -122,7 +134,7 @@ data_test["num_child"] = data_test["comment_id"].apply(
 # sentiment features:
 print("extracting sentiment features....")
 daily_feature = sentiment_normal_avg_byday(data_test, "vader")
-daily_feature = pd.concat([daily_feature, sentiment_normal_avg_byday(data_test, "socialsent")], axis = 1)
+daily_feature = pd.concat([daily_feature, sentiment_normal_avg_byday(data_test, "socialsent")], axis=1)
 #daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data_test, "vader")], axis=1)
 #daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data_test, "socialsent")], axis=1)
 # get the number of next-layer comments
