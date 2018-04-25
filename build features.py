@@ -154,7 +154,7 @@ df_num_comments.columns = ["num_comments"]
 
 df_num_children = data_test.groupby("daily_discussion_date").agg({"num_child":"mean"})
 
-data_test['num_word'] = [len(x["body"]) for i,x in data_test.iterrows()]
+data_test['num_word'] = [len(str(x["body"])) for i,x in data_test.iterrows()]
 df_num_word = data_test.groupby("daily_discussion_date").agg({"num_word":"mean"})
 
 daily_feature = pd.concat([daily_feature, opinion_avg_byday(data_test), 
