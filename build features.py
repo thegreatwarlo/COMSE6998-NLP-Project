@@ -4,7 +4,7 @@ Created on Sun Apr 15 13:11:19 2018
 
 @author: Carlo
 """
-
+#%%
 import csv
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from datetime import datetime
@@ -12,13 +12,15 @@ import pandas as pd
 import numpy as np
 #from collections import defaultdict
 
+IN_FILE_1 = './data/data/bitcoin_markets_daily_discussion_august_v1.csv'
+IN_FILE_2 = './data/data/bitcoin_markets_daily_discussion_september_v1.csv'
+IN_FILE_3 = './data/data/bitcoin_markets_daily_discussion_october_v1.csv'
+IN_FILE_4 = './data/data/bitcoin_markets_daily_discussion_november_v1.csv'
+IN_FILE_5 = './data/data/bitcoin_markets_daily_discussion_december_v1.csv'
+IN_FILE_6 = './data/data/bitcoin_markets_daily_discussion_january_v1.csv'
+IN_FILE_7 = './data/data/bitcoin_markets_daily_discussion_february_v1.csv'
+IN_FILE_8 = './data/data/bitcoin_markets_daily_discussion_march_v1.csv'
 
-IN_FILE_1 = './data/data/bitcoin_markets_daily_discussion_september_v1.csv'
-IN_FILE_2 = './data/data/bitcoin_markets_daily_discussion_october_v1.csv'
-IN_FILE_3 = './data/data/bitcoin_markets_daily_discussion_november_v1.csv'
-IN_FILE_4 = './data/data/bitcoin_markets_daily_discussion_december_v1.csv'
-IN_FILE_5 = './data/data/bitcoin_markets_daily_discussion_november_v1.csv'
-IN_FILE_6 = './data/data/bitcoin_markets_daily_discussion_august_v1.csv'
 LEXICON = './combined.txt'
 
 
@@ -27,17 +29,17 @@ LEXICON = './combined.txt'
 socialsent = SIA(lexicon_file = LEXICON)
 vader = SIA()
 
-corpus = []
 
 def read_corpus(infile, corp):
     with open(infile) as f:
         reader = csv.reader(f, delimiter = ',', quotechar = '"')
         next(f)
         for row in reader:
-            ss_score = socialsent.polarity_scores(row[3])
-            out_row = [entry for entry in row]
-            out_row.append(ss_score)
-            corp.append(out_row)
+            if len(row) == 9:
+                ss_score = socialsent.polarity_scores(row[3])
+                out_row = [entry for entry in row]
+                out_row.append(ss_score)
+                corp.append(out_row)
 
     
 def sentiment_normal_avg_byday(df, lexicon_name):
@@ -90,16 +92,18 @@ def opinion_avg_byday(df):
     for t in opinion_types:
         groupby_dict[t] = "mean"
     return df.groupby("daily_discussion_date").agg(groupby_dict)
-
+#%%
 # main function
-    
-read_corpus(IN_FILE_1, corpus)
-read_corpus(IN_FILE_2, corpus)
-read_corpus(IN_FILE_3, corpus)
-read_corpus(IN_FILE_4, corpus)
-read_corpus(IN_FILE_5, corpus)
-read_corpus(IN_FILE_6, corpus)
-
+corpus = []  
+#read_corpus(IN_FILE_1, corpus)
+#read_corpus(IN_FILE_2, corpus)
+#read_corpus(IN_FILE_3, corpus)
+#read_corpus(IN_FILE_4, corpus)
+#read_corpus(IN_FILE_5, corpus)
+#read_corpus(IN_FILE_6, corpus)
+#read_corpus(IN_FILE_7, corpus)
+read_corpus(IN_FILE_8, corpus)
+#%%
 data_test = pd.DataFrame(corpus)
 data_test.columns = ["comment_id","daily_discussion_date","created","body",
                      "parent_id","vader_scores","upvotes","downvotes",
@@ -122,11 +126,11 @@ for index, row in data_test.iterrows():
     
 data_test = pd.concat([data_test.drop(['vader_scores'], axis=1), 
                        data_test['vader_scores'].apply(pd.Series)], axis=1)
-    
+
 data_test = data_test.rename(index = str, columns = 
                  {"pos": "vader_pos", "neg": "vader_neg", 
                   "neu": "vader_neu", "compound":"vader_compound"})
-    
+   
 # get the number of next-layer comments
 data_test["num_child"] = data_test["comment_id"].apply(
         lambda x: data_test[data_test["parent_id"]==x].shape[0])
@@ -139,6 +143,7 @@ daily_feature = pd.concat([daily_feature, sentiment_normal_avg_byday(data_test, 
 #daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data_test, "socialsent")], axis=1)
 # get the number of next-layer comments
 #daily_feature = pd.concat([daily_feature, sentiment_child_avg_byday(data_test, "vader")], axis=1)
+
 
 # statistical features:
 print("extracting statistical features....")
@@ -155,7 +160,7 @@ df_num_word = data_test.groupby("daily_discussion_date").agg({"num_word":"mean"}
 daily_feature = pd.concat([daily_feature, opinion_avg_byday(data_test), 
                            df_num_comments, df_num_children, df_num_word], axis=1)
 
-daily_feature.to_csv('features_test.csv')
+daily_feature.to_csv('features_mar.csv')
 
 
 
