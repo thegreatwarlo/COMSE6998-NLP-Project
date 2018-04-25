@@ -101,8 +101,8 @@ corpus = []
 #read_corpus(IN_FILE_4, corpus)
 #read_corpus(IN_FILE_5, corpus)
 #read_corpus(IN_FILE_6, corpus)
-#read_corpus(IN_FILE_7, corpus)
-read_corpus(IN_FILE_8, corpus)
+read_corpus(IN_FILE_7, corpus)
+#read_corpus(IN_FILE_8, corpus)
 #%%
 data_test = pd.DataFrame(corpus)
 data_test.columns = ["comment_id","daily_discussion_date","created","body",
@@ -118,7 +118,8 @@ data_test = data_test.rename(index = str, columns =
 
 for index, row in data_test.iterrows():
     #convert vader score to entries
-    data_test.set_value(index, 'vader_scores', eval(row['vader_scores']))
+    if 'vader_scores' in row:
+        data_test.set_value(index, 'vader_scores', eval(row['vader_scores']))
     
     #parse date
     dt = datetime.fromtimestamp(int(row['created'].split('.')[0])).strftime('%Y-%m-%d %H')
@@ -160,7 +161,7 @@ df_num_word = data_test.groupby("daily_discussion_date").agg({"num_word":"mean"}
 daily_feature = pd.concat([daily_feature, opinion_avg_byday(data_test), 
                            df_num_comments, df_num_children, df_num_word], axis=1)
 
-daily_feature.to_csv('features_mar.csv')
+daily_feature.to_csv('features_feb.csv')
 
 
 
