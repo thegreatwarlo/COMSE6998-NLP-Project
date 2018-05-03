@@ -2,7 +2,7 @@
 """
 Created on Sun Apr 15 13:11:19 2018
 
-@author: Carlo
+@author: Carlo and Weiqi
 """
 #%%
 import csv
@@ -44,6 +44,8 @@ def flatten(lexicon, d):
                  {"pos": "%s_pos" % (lexicon), "neg": "%s_neg" % (lexicon), 
                   "neu": "%s_neu" % (lexicon), "compound":"%s_compound" % (lexicon)})
     
+    return d
+    
     
 def sentiment_normal_avg_byday(df, lexicon_name):
     # lexicon name can only be "vader", "socialsent".
@@ -58,26 +60,37 @@ def sentiment_votes_avg_byday(df, lexicon_name):
     weighted_mean = lambda x: np.average(x, weights=df.loc[x.index, "upvotes"])
     # lexicon name can only be "vader", "socialsent".
     sent_catogory = ["compound", "neu", "neg", "pos"]
-    col_names = [lexicon_name+"_"+i for i in sent_catogory]
-    renames = [lexicon_name+"_"+"votes"+"_"+i for i in sent_catogory]
+    col_names = [lexicon_name + "_" + i for i in sent_catogory]
+    renames = [lexicon_name + "_" + "votes" + "_" + i for i in sent_catogory]
     groupby_dict = {}
     for key in col_names:
         groupby_dict[key] = weighted_mean
-    df_result = df.groupby("daily_discussion_date").agg(groupby_dict)
-    df_result.columns = renames
+    try:
+        df_result = df.groupby("daily_discussion_date").agg(groupby_dict)
+        df_result.columns = renames
+    except ZeroDivisionError:
+        df["upvotes"] = df["upvotes"].apply(lambda x: (x + 1e-4))
+        df_result = df.groupby("daily_discussion_date").agg(groupby_dict)
+        df_result.columns = renames
+
     return df_result
 
 def sentiment_child_avg_byday(df, lexicon_name):
     weighted_mean = lambda x: np.average(x, weights=df.loc[x.index, "num_child"])
     # lexicon name can only be "vader", "socialsent".
     sent_catogory = ["compound", "neu", "neg", "pos"]
-    col_names = [lexicon_name+"_"+i for i in sent_catogory]
-    renames = [lexicon_name+"_"+"child"+"_"+i for i in sent_catogory]
+    col_names = [lexicon_name + "_" + i for i in sent_catogory]
+    renames = [lexicon_name + "_" + "child" + "_" + i for i in sent_catogory]
     groupby_dict = {}
     for key in col_names:
         groupby_dict[key] = weighted_mean
-    df_result = df.groupby("daily_discussion_date").agg(groupby_dict)
-    df_result.columns = renames
+    try:
+        df_result = df.groupby("daily_discussion_date").agg(groupby_dict)
+        df_result.columns = renames
+    except ZeroDivisionError:
+        df["num_child"] = df["num_child"].apply(lambda x: (x + 1e-4))
+        df_result = df.groupby("daily_discussion_date").agg(groupby_dict)
+        df_result.columns = renames
     return df_result
 
 # Bullish, Bearish, Long-term Holder, Bitcoin Skeptic, None
@@ -107,7 +120,9 @@ def opinion_avg_byday(df):
 #IN_FILE = './data/data/bitcoin_markets_daily_discussion_january_v1.csv'
 #IN_FILE = './data/data/bitcoin_markets_daily_discussion_february_v1.csv'
 #IN_FILE = './data/data/bitcoin_markets_daily_discussion_march_v1.csv'
-IN_FILE = './eth/eth/ethtrader_daily_discussion_september_v1.csv'
+IN_FILE = './data/eth/ethtrader_daily_discussion_september_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_october_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_november_v1.csv'
 
 #this are use to distinguish between the different type of input files
 out_tags= IN_FILE.split('/')[-1].split('_')
@@ -126,15 +141,6 @@ data.columns = ["comment_id","daily_discussion_date","created","body",
                      "parent_id","vader_scores","upvotes","downvotes",
                      "author_opinion","socialsent_scores"]
 
-#flattens the socialsent scores
-data = pd.concat([data.drop(['socialsent_scores'], axis=1), 
-                       data['socialsent_scores'].apply(pd.Series)], axis=1)
-
-#renames the socialsent columns
-data = data.rename(index = str, columns = 
-                 {"pos": "socialsent_pos", "neg": "socialsent_neg", 
-                  "neu": "socialsent_neu", "compound":"socialsent_compound"})
-
 for index, row in data.iterrows():
     #convert vader score to entries
     if 'vader_scores' in row:
@@ -143,28 +149,33 @@ for index, row in data.iterrows():
     #parse date
     dt = datetime.fromtimestamp(int(row['created'].split('.')[0])).strftime('%Y-%m-%d %H')
     data.set_value(index, 'daily_discussion_date', dt)
+
+# some outliers handling...
+data["daily_discussion_date"] = pd.to_datetime(data["daily_discussion_date"])
+data["month"] = data.daily_discussion_date.apply(lambda x:x.month)
+data = data.drop(data[data.month != data.iloc[0].month].index)
+
+#flattens the socialsent scores
+data = flatten('socialsent', data)
  
 #flattens the vader scores
-data = pd.concat([data.drop(['vader_scores'], axis=1), 
-                       data['vader_scores'].apply(pd.Series)], axis=1)
-
-#renames vader columns
-data = data.rename(index = str, columns = 
-                 {"pos": "vader_pos", "neg": "vader_neg", 
-                  "neu": "vader_neu", "compound":"vader_compound"})
+data = flatten('vader', data)
    
 # get the number of next-layer comments
 data["num_child"] = data["comment_id"].apply(
         lambda x: data[data["parent_id"]==x].shape[0])
 
+data["upvotes"] = data.upvotes.apply(lambda x:int(x))
+
 # sentiment features:
 print("extracting sentiment features....")
 daily_feature = sentiment_normal_avg_byday(data, "vader")
 daily_feature = pd.concat([daily_feature, sentiment_normal_avg_byday(data, "socialsent")], axis=1)
-#daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data, "vader")], axis=1)
-#daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data, "socialsent")], axis=1)
+daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data, "vader")], axis=1)
+daily_feature = pd.concat([daily_feature, sentiment_votes_avg_byday(data, "socialsent")], axis=1)
 # get the number of next-layer comments
-#daily_feature = pd.concat([daily_feature, sentiment_child_avg_byday(data, "vader")], axis=1)
+daily_feature = pd.concat([daily_feature, sentiment_child_avg_byday(data, "vader")], axis=1)
+daily_feature = pd.concat([daily_feature, sentiment_child_avg_byday(data, "socialsent")], axis=1)
 
 
 # statistical features:
@@ -183,31 +194,5 @@ daily_feature = pd.concat([daily_feature, opinion_avg_byday(data),
                            df_num_comments, df_num_children, df_num_word], axis=1)
     
 
-daily_feature.to_csv('features_feb.csv')
-
-
-
-
-
-       
-#comments_per_day = defaultdict(list)
-
-#for c in corpus:
-#    comments_per_day[c[1]].append(c)
-    
-#features = []
-
-#for c in corpus:
-#    datum = {}
-#    datum['date'] = c[1]
-#    datum['sentiment'] = c[4]
-#    datum['n_comments'] = len(comments_per_day[c[1]])
-#    datum['length'] = len(c[2])
-#    features.append(datum)
-        
-#with open('./data/bitcoin_markets_daily_discussion_v2.csv', 'w') as csvfile:
-#        writer = csv.writer(csvfile)
-#        writer.writerow(['comment_id', 'date', 'body', 'parent_id', 'vader_scores', 'socialsent_scores'])
-#        for submission in corpus:
-#            writer.writerow(submission)
+daily_feature.to_csv(out_file)
 
