@@ -120,9 +120,15 @@ def opinion_avg_byday(df):
 #IN_FILE = './data/data/bitcoin_markets_daily_discussion_january_v1.csv'
 #IN_FILE = './data/data/bitcoin_markets_daily_discussion_february_v1.csv'
 #IN_FILE = './data/data/bitcoin_markets_daily_discussion_march_v1.csv'
-IN_FILE = './data/eth/ethtrader_daily_discussion_september_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_september_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_october_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_november_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_december_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_january_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_february_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_march_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_april_v1.csv'
+IN_FILE = './data/eth/ethtrader_daily_discussion_may_v1.csv'
 
 #this are use to distinguish between the different type of input files
 out_tags= IN_FILE.split('/')[-1].split('_')
