@@ -112,14 +112,14 @@ def opinion_avg_byday(df):
 
 
 #%%
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_august_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_september_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_october_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_november_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_december_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_january_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_february_v1.csv'
-#IN_FILE = './data/data/bitcoin_markets_daily_discussion_march_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_august_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_september_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_october_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_november_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_december_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_january_v1.csv'
+#IN_FILE = './data/btc/bitcoin_markets_daily_discussion_february_v1.csv'
+IN_FILE = './data/btc/bitcoin_markets_daily_discussion_march_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_september_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_october_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_november_v1.csv'
@@ -128,7 +128,7 @@ def opinion_avg_byday(df):
 #IN_FILE = './data/eth/ethtrader_daily_discussion_february_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_march_v1.csv'
 #IN_FILE = './data/eth/ethtrader_daily_discussion_april_v1.csv'
-IN_FILE = './data/eth/ethtrader_daily_discussion_may_v1.csv'
+#IN_FILE = './data/eth/ethtrader_daily_discussion_may_v1.csv'
 
 #this are use to distinguish between the different type of input files
 out_tags= IN_FILE.split('/')[-1].split('_')
@@ -159,7 +159,8 @@ for index, row in data.iterrows():
 # some outliers handling...
 data["daily_discussion_date"] = pd.to_datetime(data["daily_discussion_date"])
 data["month"] = data.daily_discussion_date.apply(lambda x:x.month)
-data = data.drop(data[data.month != data.iloc[0].month].index)
+#bitcoin discussion dates are sorted in inverse order -take month from last entry
+data = data.drop(data[data.month != data.iloc[-1].month].index)
 
 #flattens the socialsent scores
 data = flatten('socialsent', data)
